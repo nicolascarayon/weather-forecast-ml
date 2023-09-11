@@ -355,7 +355,6 @@ def get_db_info(current_user: Annotated[User, Depends(authent.get_current_active
 @app.post("/populate_weather_table", name='Populate table WEATHER_DATA with historical data from Weather API',
           tags=[ApiTags.weatherData.value])
 async def populate_weather_table(current_user: Annotated[User, Depends(authent.get_current_active_user)]):
-
     """
     Populate table WEATHER_DATA with historical data from weatherstack.com
     \nInputs :
