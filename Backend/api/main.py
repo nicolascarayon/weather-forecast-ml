@@ -25,9 +25,9 @@ origins = [
     "http://localhost",
     "http://localhost:8000",
     "http://localhost:5000",
-    "s3://datalake-weather-castle/mlflow/",
-    "https://datalake-weather-castle.s3.eu-west-3.amazonaws.com/mlflow/",
-    "https://datalake-weather-castle.s3.eu-west-3.amazonaws.com/mlflow/"
+    # "s3://datalake-weather-castle/mlflow/",
+    # "https://datalake-weather-castle.s3.eu-west-3.amazonaws.com/mlflow/",
+    # "https://datalake-weather-castle.s3.eu-west-3.amazonaws.com/mlflow/"
     # Add more allowed origins as needed
 ]
 
@@ -93,8 +93,7 @@ def read_root():
     Display API welcome message
     """
 
-    msg = "Welcome to the Joffrey LEMERY, Nicolas CARAYON and Jacques DROUVROY "
-    msg += "Forecast Weather API for places around Margaux in Médoc"
+    msg = "Welcome to the Forecast Weather API for places around Margaux in Médoc"
     return msg
 
 
@@ -150,6 +149,57 @@ async def get_historitical(city: Annotated[City, Depends()], start_date, end_dat
 
     return Handle_Result(result)
 
+
+@app.post("/get_users", name='Get users', tags=[ApiTags.usersAndPermissions.value])
+async def get_users(current_user: Annotated[User, Depends(authent.get_current_active_user)]):
+    """
+    Get users from table USERS
+    """
+    if Permissions.Permissions.user_mngt.value not in current_user.permissions:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You don't have the permission")
+
+    result = UserDao.get_users()
+
+    return Handle_Result(result)
+
+
+@app.post("/get_permissions", name='Get permissions', tags=[ApiTags.usersAndPermissions.value])
+async def get_permissions(current_user: Annotated[User, Depends(authent.get_current_active_user)]):
+    """
+    Get permissions from table PERMISSIONS
+    """
+    if Permissions.Permissions.user_mngt.value not in current_user.permissions:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You don't have the permission")
+
+    result = UserDao.get_permissions()
+
+    return Handle_Result(result)
+
+
+@app.post("/get_user_permissions", name="Get user's permissions", tags=[ApiTags.usersAndPermissions.value])
+async def get_user_permissions(current_user: Annotated[User, Depends(authent.get_current_active_user)], user_id: str):
+    """
+    Get permissions for user with id user_id
+    """
+    if Permissions.Permissions.user_mngt.value not in current_user.permissions:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You don't have the permission")
+
+    result = UserDao.get_user_permissions(user_id=user_id)
+
+    return Handle_Result(result)
+
+
+@app.post("/get_permission_users", name="Get user who have permission", tags=[ApiTags.usersAndPermissions.value])
+async def get_permissions_users(current_user: Annotated[User, Depends(authent.get_current_active_user)], permission_id: str):
+    """
+    Get users who have permission wiyj id permission_id
+    """
+    if Permissions.Permissions.user_mngt.value not in current_user.permissions:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You don't have the permission")
+
+    result = UserDao.get_permission_users(permission_id=permission_id)
+
+    return Handle_Result(result)
 
 @app.post("/add_user", name='Add user', tags=[ApiTags.usersAndPermissions.value])
 async def add_user(user_add: Annotated[UserAdd, Depends()],

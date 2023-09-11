@@ -63,7 +63,7 @@ class UserDao():
     @staticmethod
     def get_users():
         """
-        Get all users from table USERS
+        Get users from table USERS
         """
         ctx = DbCnx.get_db_cnx(db_info)
         cs = DbCnx.get_cursor(db_info.db_env, ctx)
@@ -75,7 +75,24 @@ class UserDao():
             cs.close()
             ctx.close()
 
-        return users
+        return {KeyReturn.success.value: users}
+
+    @staticmethod
+    def get_permissions():
+        """
+        Get permissions from table PERMISSIONS
+        """
+        ctx = DbCnx.get_db_cnx(db_info)
+        cs = DbCnx.get_cursor(db_info.db_env, ctx)
+        try:
+            request = "SELECT * FROM PERMISSIONS"
+            cs.execute(request)
+            permissions = cs.fetchall()
+        finally:
+            cs.close()
+            ctx.close()
+
+        return {KeyReturn.success.value: permissions}
 
     @staticmethod
     def user_exists(user_id: str):
@@ -126,7 +143,33 @@ class UserDao():
             cs.close()
             ctx.close()
 
-        return permission_ids
+        return {KeyReturn.success.value: permission_ids}
+
+    @staticmethod
+    def get_permission_users(permission_id: str):
+        """
+        Get all users who have permission with permission_id
+        """
+        ctx = DbCnx.get_db_cnx(db_info)
+        cs = DbCnx.get_cursor(db_info.db_env, ctx)
+        try:
+            request = """
+                SELECT * FROM USER_PERMISSION
+                WHERE PERMISSION_ID = %s
+                """
+            cs.execute(request, (permission_id,))
+            users = cs.fetchall()
+            user_ids = [user['USER_ID'] for user in users]
+        except Exception as e:
+            msg = f"Failed to get users with permission '{permission_id}'"
+            logging.exception(f"{msg} \n {e}")
+            return None
+        finally:
+            cs.close()
+            ctx.close()
+
+        return {KeyReturn.success.value: user_ids}
+
 
     @staticmethod
     def user_has_permission(userPermission: UserPermission):
@@ -173,7 +216,7 @@ class UserDao():
             ctx.close()
 
         user = User(**user_dict)
-        user.permissions = UserDao.get_user_permissions(user.user_id)
+        user.permissions = UserDao.get_user_permissions(user.user_id)[KeyReturn.success.value]
         return user
 
     @staticmethod
