@@ -1,6 +1,4 @@
 import os
-import boto3
-import logging
 from dotenv import dotenv_values
 from db_access.DbType import DbType
 
@@ -12,35 +10,6 @@ def get_var_value(config, varname):
         return os.environ.get(varname)
     else:
         return config[varname]
-
-
-class S3Access():
-    def __init__(self):
-        self.session = boto3.Session()
-        self.s3 = self.session.resource('s3')
-
-
-class S3VarAccess():
-    def __init__(self, config=config):
-        self.bucket_name = get_var_value(config, 'BUCKET_NAME')
-
-
-class S3LogHandler(logging.StreamHandler):
-    def __init__(self, bucket_name, log_path):
-        super().__init__()
-        self.bucket_name = bucket_name
-        self.log_path = log_path
-        self.session = boto3.Session(
-            aws_access_key_id=get_var_value(config, 'AWS_ACCESS_KEY_ID'),
-            aws_secret_access_key=get_var_value(config, 'AWS_SECRET_ACCESS_KEY'),
-            region_name=get_var_value(config, 'AWS_DEFAULT_REGION')
-        )
-        self.s3 = self.session.resource('s3')
-
-    def emit(self, record):
-        log_message = self.format(record)
-        # Upload log message to S3 bucket
-        self.s3.Object(self.bucket_name, self.log_path).put(Body=log_message)
 
 
 class VarEnvSecurApi():
@@ -58,8 +27,7 @@ class VarEnvWeatherApi():
 
 class VarEnvInferenceModel():
     def __init__(self, config=config):
-        self.model_inference = get_var_value(config, 'MODEL_INFERENCE')
-        self.s3_root = get_var_value(config, 'S3_ROOT_INFERENCE')
+        self.model_inference = get_var_value(config, 'MODEL_INFERENCE')        
         self.path_artifact = get_var_value(config, 'PATH_ARTIFACT_INFERENCE')
         self.fcst_history = get_var_value(config, 'FCST_HISTORY')
         self.fcst_horizon = get_var_value(config, 'FCST_HORIZON')

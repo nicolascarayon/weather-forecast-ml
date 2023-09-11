@@ -1,10 +1,10 @@
 import os
 import logging
 from datetime import datetime
-from config.variables import S3LogHandler, S3VarAccess
+# from config.variables import S3LogHandler, S3VarAccess
 
 date_string = datetime.now().strftime('%Y%m%d')
-s3_var_access = S3VarAccess()
+# s3_var_access = S3VarAccess()
 
 
 def setup_logging():
@@ -20,7 +20,3 @@ def setup_logging():
         level=logging.INFO,
         datefmt='%Y-%m-%d %H:%M:%S'
     )
-
-    # Add a handler to upload log files to S3
-    s3_handler = S3LogHandler(s3_var_access.bucket_name, log_path)
-    logging.getLogger().addHandler(s3_handler)

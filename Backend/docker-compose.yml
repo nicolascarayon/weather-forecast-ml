@@ -28,7 +28,7 @@ services:
       context: ${BACKEND_PROJ_DIR}/api
     container_name: api
     environment:
-      SECRET_KEY: ${SECRET_KEY}
+      # SECRET_KEY: ${SECRET_KEY}
       ALGORITHM: ${ALGORITHM}
       WEATHER_API_KEY: ${WEATHER_API_KEY}
       DB_ENV: ${DB_ENV}
@@ -41,24 +41,13 @@ services:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
       DB_MYSQL_USER: ${DB_MYSQL_USER}
-      DB_MYSQL_HOST: ${DB_MYSQL_HOST}
-      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
-      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
-      AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION}
-      TERM: ${TERM}
-      BUCKET_NAME: ${BUCKET_NAME}
+      DB_MYSQL_HOST: ${DB_MYSQL_HOST}      
+      TERM: ${TERM}      
       MLFLOW_SERVER_PORT: ${MLFLOW_SERVER_PORT}
-      PATH_ARTIFACT_INFERENCE: ${PATH_ARTIFACT_INFERENCE}
-      S3_ROOT_INFERENCE: ${S3_ROOT_INFERENCE}
+      PATH_ARTIFACT_INFERENCE: ${PATH_ARTIFACT_INFERENCE}      
     ports:
       - 8000:8000      
-#    deploy:
-#      resources:
-#        reservations:
-#          devices:
-#            - driver: nvidia
-#              count: 1
-#              capabilities: [gpu]
+
     networks:
         - outside
         - backend

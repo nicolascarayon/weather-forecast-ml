@@ -13,15 +13,10 @@ from snowflake.connector import DictCursor
 from mysql.connector import connect as connect_mysql
 from mysql.connector.cursor_cext import CMySQLCursorDict
 from snowflake.connector import connect as connect_sf
-from config.variables import S3VarAccess, S3Access, DbInfo
+from config.variables import DbInfo
 
-# Opening a Boto session to get acces to the bucket S3 of the projet
-# The EC2 machine has to be configured with AWS CLI and access Key
 
-# Get info to connect to database and AWS bucket
 db_info = DbInfo()
-s3_access = S3Access()
-s3_var_access = S3VarAccess()
 
 # Logger Import
 LoggingConfig.setup_logging()
@@ -596,10 +591,10 @@ class UserDao():
     def get_logs():
         try:
             # Find the logs
-            log_path = f"logs/app_{datetime.now().strftime('%Y%m%d')}.log"
+            # log_path = f"logs/app_{datetime.now().strftime('%Y%m%d')}.log"
 
             # Download log file from S3 bucket
-            s3_access.s3.Object(s3_var_access.bucket_name, log_path).download_file('/tmp/app.log')
+            # s3_access.s3.Object(s3_var_access.bucket_name, log_path).download_file('/tmp/app.log')
 
             # Read the downloaded log file
             with open('/tmp/app.log', 'r') as log_file:
