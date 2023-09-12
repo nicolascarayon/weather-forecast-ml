@@ -25,7 +25,6 @@ LoggingConfig.setup_logging()
 
 class DbCnx():
 
-    # Redondance avec Dbinfo
     @staticmethod
     def get_db_cnx(db_cnx_info: DbInfo):
         db_cnx = None
