@@ -1,3 +1,4 @@
+import json
 import gdown
 import logging
 import requests
@@ -24,8 +25,8 @@ class UserDataProc():
                          'wind_degree', 'wind_dir', 'pressure', 'precip', 'humidity',
                          'cloudcover', 'feelslike', 'uv_index', 'visibility', 'time', 'city']
     NB_DAYS = 59
-    FILE_ID = varenv_weather_api.file_id
-    URL_HIST_DATA = f"https://drive.google.com/uc?id={FILE_ID}"
+    HISTORIC_FILE_ID = varenv_weather_api.historic_file_id
+    URL_HIST_DATA = f"https://drive.google.com/uc?id={HISTORIC_FILE_ID}"
     WEATHER_DATA_TABLE = 'WEATHER_DATA'
 
     @staticmethod
@@ -40,8 +41,9 @@ class UserDataProc():
 
             # empty table WEATHER_DATA (to avoid duplicates after historical data insertion)
             await UserDao.empty_weather_data()
+
             # populate table WEATHER_DATA with hostorical data
-            await UserDao.send_data_from_df_to_db(df, table_name=UserDataProc.WEATHER_DATA_TABLE)
+            await UserDao.send_data_from_df_to_db(df, table_name=UserDataProc.WEATHER_DATA_TABLE, index='id')
 
             logging.info(f"Historical data successfully added to table {UserDataProc.WEATHER_DATA_TABLE}")
             return {KeyReturn.success.value: 'Historical data successfully inserted into db'}
@@ -49,10 +51,11 @@ class UserDataProc():
             return {KeyReturn.error.value: f"Historical data insertion failed : {e}"}
 
     @staticmethod
-    def get_data_hist_on_period(city, date_start, date_end):
+    async def get_data_hist_on_period(city, date_start, date_end, columns):
         """
         Return a dataframe populated with weather data for city on period defined by date_start and date_end
         """
+
         date_start_str = date_start.strftime("%Y-%m-%d")
         date_end_str = date_end.strftime("%Y-%m-%d")
 
@@ -64,14 +67,14 @@ class UserDataProc():
             'hourly': '1',
             'interval': '3'
         }
-
+        
         response = requests.get(UserDataProc.URL_HISTORICAL, params)
         if response.status_code == 200:
             data = response.json()
-            df_hist = pd.DataFrame(columns=["observation_time", "temperature", "weather_code", "wind_speed",
-                                            "wind_degree", "wind_dir", "pressure", "precip",
-                                            "humidity", "cloudcover", "feelslike", "uv_index",
-                                            "visibility", "time", "city"])
+            with open('historical_data.txt', 'w', encoding='utf-8') as file:
+                json.dump(data['historical'], file, ensure_ascii=False, indent=4)
+
+            df_hist = pd.DataFrame(columns=columns)
 
             for date, date_data in data['historical'].items():
                 for hourly_data in date_data['hourly']:
@@ -123,6 +126,15 @@ class UserDataProc():
         return df_hist
 
     @staticmethod
+    async def set_column_id_to_df(df: pd.DataFrame) -> pd.DataFrame:
+        id_first = await UserDao.get_last_id_weather()
+        id_first += 1
+        df['id'] = range(id_first, id_first + len(df))
+        df = df[['id'] + [col for col in df.columns if col != 'id']]
+
+        return df
+
+    @staticmethod
     async def update_weather_data():
         """
         For all cities in table CITIES, fetch data from Weather API and feed table WEATHER_DATA
@@ -155,21 +167,24 @@ class UserDataProc():
             # df_hist <- weather data for all cities from date_start to date_end
             df_hist = pd.DataFrame(columns=UserDataProc.COLUMNS_MANDATORY)
 
-            for i in range(0, delta_days, nb_days):  # loop over each 60-day period (because of weatherstack limitation)
-
+            for i in range(0, delta_days, nb_days):  # loop over each 60-day period (because of weatherstack limitation)                
                 date_start_period = date_start + timedelta(days=i)
                 date_end_period = min(date_start_period + timedelta(days=nb_days), date_end)
 
                 # get historical data from weatherstack API
-                df_temp = UserDataProc.get_data_hist_on_period(city=city,
-                                                               date_start=date_start_period,
-                                                               date_end=date_end_period)
+                df_temp = await UserDataProc.get_data_hist_on_period(city=city,
+                                                                     date_start=date_start_period,
+                                                                     date_end=date_end_period,
+                                                                     columns=UserDataProc.COLUMNS_MANDATORY)
 
                 df_hist = pd.concat([df_hist, df_temp], ignore_index=True)
 
+            # Add 'id' as first column (id begining from last id found in WEATHER_DATA)
+            df_hist = await UserDataProc.set_column_id_to_df(df_hist)
+
             print(f"\nUpdating table WEATHER_DATA for '{city}'...")
             try:
-                success = await UserDao.send_data_from_df_to_db(df_hist, 'WEATHER_DATA')
+                success = await UserDao.send_data_from_df_to_db(df_hist, 'WEATHER_DATA', 'id')
                 if success:
                     msg = f"Weather data for '{city}' successfully updated\n"
                     print(msg)

@@ -148,7 +148,7 @@ class Tools():
         model_data.columns = model_data.columns.str.upper()
 
         try:
-            success = await UserDao.send_data_from_df_to_db(model_data, table_name='MODEL_DATA')
+            success = await UserDao.send_data_from_df_to_db(model_data, table_name='MODEL_DATA', index='RUN_NAME')
             if success:
                 msg = f"Model data {run_id} successfully updated\n"
                 print(msg)
@@ -212,7 +212,7 @@ class Tools():
             df_total_pred = pd.concat([save_new_df, preds_df], ignore_index=True)
             preds_df['city'] = city
 
-            await UserDao.send_data_from_df_to_db(preds_df, table_name='FORECAST_DATA')
+            await UserDao.send_data_from_df_to_db(preds_df, table_name='FORECAST_DATA', index='ID')
 
             return {KeyReturn.success.value: df_total_pred}
 

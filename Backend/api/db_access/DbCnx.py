@@ -1,5 +1,6 @@
 import logging
 import pandas as pd
+from typing import Optional
 from datetime import datetime
 from logger import LoggingConfig
 from db_access.DbType import DbType
@@ -169,7 +170,6 @@ class UserDao():
             ctx.close()
 
         return {KeyReturn.success.value: user_ids}
-
 
     @staticmethod
     def user_has_permission(userPermission: UserPermission):
@@ -415,6 +415,22 @@ class UserDao():
         return last_date
 
     @staticmethod
+    async def get_last_id_weather() -> Optional[int]:
+        ctx = DbCnx.get_db_cnx(db_info)
+        cs = DbCnx.get_cursor(db_info.db_env, ctx)
+        request = """SELECT max(ID) as MAX_ID FROM WEATHER_DATA"""
+        try:
+            cs.execute(request)
+            max_id_dic = cs.fetchone()
+            max_id = max_id_dic['MAX_ID']
+        finally:
+            cs.close()
+            ctx.close()
+
+        return max_id
+
+
+    @staticmethod
     async def empty_weather_data():
         ctx = DbCnx.get_db_cnx(db_info)
         cs = DbCnx.get_cursor(db_info.db_env, ctx)
@@ -589,12 +605,13 @@ class UserDao():
             logging.exception(msg)
         finally:
             return db_engine
-        
+
     @staticmethod
-    async def send_data_from_df_to_db(df, table_name):
+    async def send_data_from_df_to_db(df: pd.DataFrame, table_name: str, index: str):
         db_engine = UserDao.get_db_engine(db_info)
         if db_engine:
             try:
+                df.drop_duplicates(subset=index, keep='first', inplace=True)
                 df.to_sql(table_name, con=db_engine, if_exists='append', index=False)
             except Exception as e:
                 msg = f"Data insertion into table {table_name} failed : {e}"

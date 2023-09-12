@@ -190,7 +190,8 @@ async def get_user_permissions(current_user: Annotated[User, Depends(authent.get
 
 
 @app.post("/get_permission_users", name="Get user who have permission", tags=[ApiTags.usersAndPermissions.value])
-async def get_permissions_users(current_user: Annotated[User, Depends(authent.get_current_active_user)], permission_id: str):
+async def get_permissions_users(current_user: Annotated[User, Depends(authent.get_current_active_user)],
+                                permission_id: str):
     """
     Get users who have permission wiyj id permission_id
     """
@@ -200,6 +201,7 @@ async def get_permissions_users(current_user: Annotated[User, Depends(authent.ge
     result = UserDao.get_permission_users(permission_id=permission_id)
 
     return Handle_Result(result)
+
 
 @app.post("/add_user", name='Add user', tags=[ApiTags.usersAndPermissions.value])
 async def add_user(user_add: Annotated[UserAdd, Depends()],

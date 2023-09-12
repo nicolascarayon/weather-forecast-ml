@@ -18,7 +18,7 @@ jobs:
       SECRET_KEY: ${{ secrets.SECRET_KEY }}
       ALGORITHM: ${{ secrets.ALGORITHM }}
       WEATHER_API_KEY: ${{ secrets.WEATHER_API_KEY }}
-      FILE_ID: ${{ secrets.FILE_ID }}
+      HISTORIC_FILE_ID: ${{ secrets.HISTORIC_FILE_ID }}
       WAREHOUSE_SNOWFLAKE: ${{ secrets.WAREHOUSE_SNOWFLAKE }}
       DB_SNOWFLAKE: ${{ secrets.DB_SNOWFLAKE }}
       SCHEMA_SNOWFLAKE: ${{ secrets.SCHEMA_SNOWFLAKE }}
@@ -79,7 +79,7 @@ jobs:
           echo ALGORITHM=${ALGORITHM}
           echo WEATHER_API_KEY=${WEATHER_API_KEY}
           echo DB_ENV=${DB_ENV}
-          echo FILE_ID=${FILE_ID}
+          echo HISTORIC_FILE_ID=${HISTORIC_FILE_ID}
           echo ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES}
           echo WAREHOUSE_SNOWFLAKE=${WAREHOUSE_SNOWFLAKE}
           echo DB_SNOWFLAKE=${DB_SNOWFLAKE}
